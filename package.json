@@ -1,0 +1,17 @@
+{
+  "name": "saferoots",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["client", "server"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm --workspace=client run dev",
+    "dev:server": "npm --workspace=server run dev",
+    "build": "npm --workspace=client run build && npm --workspace=server run build",
+    "seed": "npm --workspace=server run seed",
+    "lint": "npm --workspace=client run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
