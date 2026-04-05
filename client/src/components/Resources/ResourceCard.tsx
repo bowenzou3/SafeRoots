@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Resource, ResourceCategory } from '../../types';
-import { Phone, Globe, Clock, MapPin, Tag } from 'lucide-react';
+import { Phone, Globe, Clock, MapPin, Tag, Zap, ShowerHead, Utensils, WashingMachine, Accessibility } from 'lucide-react';
 
 const CATEGORY_CONFIG: Record<ResourceCategory, { label: string; className: string }> = {
   'food':              { label: 'Food',              className: 'bg-orange-100 text-orange-700' },
@@ -20,12 +20,21 @@ interface Props {
 
 export function ResourceCard({ resource }: Props) {
   const cat = CATEGORY_CONFIG[resource.category];
+  const statusColor = {
+    open: 'bg-green-100 text-green-700',
+    limited: 'bg-amber-100 text-amber-700',
+    full: 'bg-red-100 text-red-700',
+    closed: 'bg-gray-100 text-gray-600',
+  }[resource.liveStatus];
 
   return (
     <article className="card p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold text-gray-900 leading-snug">{resource.name}</h3>
-        <span className={`tag flex-shrink-0 ${cat.className}`}>{cat.label}</span>
+        <div className="flex flex-col gap-1 items-end">
+          <span className={`tag flex-shrink-0 ${cat.className}`}>{cat.label}</span>
+          <span className={`tag flex-shrink-0 ${statusColor}`}>{resource.liveStatus}</span>
+        </div>
       </div>
 
       <p className="text-sm text-gray-500 line-clamp-2">{resource.description}</p>
@@ -37,7 +46,7 @@ export function ResourceCard({ resource }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <Clock className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
-          <span>{resource.hours}</span>
+          <span>{resource.hours} · updated {Math.max(0, Math.floor((Date.now() - new Date(resource.statusUpdatedAt).getTime()) / 60000))}m ago</span>
         </div>
         <div className="flex items-center gap-2">
           <Phone className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" aria-hidden="true" />
@@ -66,6 +75,20 @@ export function ResourceCard({ resource }: Props) {
           {resource.tags.map(tag => (
             <span key={tag} className="tag bg-gray-100 text-gray-500">{tag}</span>
           ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1">
+        {resource.essentials.food && <span className="tag bg-orange-100 text-orange-700"><Utensils className="w-3 h-3" /> Food now</span>}
+        {resource.essentials.shower && <span className="tag bg-blue-100 text-blue-700"><ShowerHead className="w-3 h-3" /> Shower</span>}
+        {resource.essentials.restroom && <span className="tag bg-cyan-100 text-cyan-700"><Accessibility className="w-3 h-3" /> Restroom</span>}
+        {resource.essentials.charging && <span className="tag bg-violet-100 text-violet-700"><Zap className="w-3 h-3" /> Charging</span>}
+        {resource.essentials.laundry && <span className="tag bg-teal-100 text-teal-700"><WashingMachine className="w-3 h-3" /> Laundry</span>}
+      </div>
+
+      {resource.closingSoon && (
+        <div className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+          Closing soon
         </div>
       )}
 

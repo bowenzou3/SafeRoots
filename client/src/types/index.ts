@@ -28,6 +28,15 @@ export interface Shelter {
   services: string[];
   hours: string;
   description: string;
+  bedsAvailable: number;
+  availabilityUpdatedAt: string;
+  safetyScores: {
+    women: number;
+    lgbtq: number;
+    antiRacism: number;
+  };
+  recommendationScore?: number;
+  recommendationReasons?: string[];
 }
 
 export interface ShelterFilters {
@@ -65,6 +74,61 @@ export interface Resource {
   lat: number;
   lng: number;
   isFree: boolean;
+  liveStatus: 'open' | 'limited' | 'full' | 'closed';
+  statusUpdatedAt: string;
+  closesAt: string | null;
+  essentials: {
+    food: boolean;
+    shower: boolean;
+    restroom: boolean;
+    charging: boolean;
+    laundry: boolean;
+  };
+  closingSoon: boolean;
+}
+
+export interface OutreachPopup {
+  id: string;
+  title: string;
+  type: string;
+  city: string;
+  address: string;
+  lat: number;
+  lng: number;
+  startsAt: string;
+  endsAt: string;
+  services: string[];
+  verifiedBy: string;
+}
+
+export interface LegalHelpFlow {
+  issue: string;
+  city: string;
+  title: string;
+  steps: string[];
+  resources: Array<{ name: string; type: string }>;
+}
+
+export interface ImpactMetrics {
+  successfulReferrals: number;
+  totalCheckins: number;
+  successRate: number;
+  byChannel: Array<{ channel: string; count: number }>;
+  events: Array<{ eventType: string; count: number }>;
+}
+
+export interface TransitEta {
+  provider: string;
+  walkMinutes: number;
+  transitMinutes: number;
+  distanceKm: number;
+}
+
+export interface OutreachAuthUser {
+  id: string;
+  email: string;
+  role: 'outreach' | 'admin';
+  name: string;
 }
 
 // ─── Crisis Alerts ────────────────────────────────────────────────────────────

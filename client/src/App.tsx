@@ -9,6 +9,7 @@ import Resources from './pages/Resources';
 import PeerSupport from './pages/PeerSupport';
 import CrisisAlerts from './pages/CrisisAlerts';
 import Volunteer from './pages/Volunteer';
+import Dashboard from './pages/Dashboard';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="/support"   element={<PeerSupport />} />
               <Route path="/alerts"    element={<CrisisAlerts />} />
               <Route path="/volunteer" element={<Volunteer />} />
+              <Route path="/dashboard" element={<Dashboard />} />
             </Routes>
           </main>
         </div>

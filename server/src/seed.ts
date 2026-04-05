@@ -1,6 +1,13 @@
 import { getDb } from './db';
+import { randomBytes, scryptSync } from 'crypto';
 
 const db = getDb();
+
+function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
 
 // ─── Shelters ─────────────────────────────────────────────────────────────────
 
@@ -516,6 +523,42 @@ const alerts = [
   },
 ];
 
+const legalFlows = [
+  {
+    id: 'legal-001',
+    issue: 'lost-id',
+    city: 'National',
+    title: 'I lost my ID',
+    steps: [
+      'Visit the nearest legal aid clinic or homeless services intake office.',
+      'Request replacement birth certificate support and fee-waiver forms.',
+      'Use shelter intake letter plus case-worker affidavit as interim proof.',
+      'Apply for replacement state ID at DMV using waiver documentation.',
+    ],
+    resources: [
+      { name: 'Legal Aid Society', type: 'legal-aid' },
+      { name: 'DMV fee waiver desk', type: 'government' },
+      { name: 'Shelter case management', type: 'case-management' },
+    ],
+  },
+  {
+    id: 'legal-002',
+    issue: 'eviction',
+    city: 'National',
+    title: 'I received an eviction notice',
+    steps: [
+      'Take a photo of your notice and save copies.',
+      'Contact legal aid within 24 hours to file a response.',
+      'Ask shelter intake for emergency placement if lockout risk exists.',
+      'Request rental assistance screening and mediation support.',
+    ],
+    resources: [
+      { name: 'Tenant Rights Clinic', type: 'legal-aid' },
+      { name: 'Emergency Rental Assistance', type: 'financial-aid' },
+    ],
+  },
+];
+
 // ─── Seed DB ──────────────────────────────────────────────────────────────────
 
 function seed() {
@@ -542,6 +585,37 @@ function seed() {
       (@id, @type, @title, @description, @city, @expiresAt, @severity)
   `);
 
+  const insertLegalFlow = db.prepare(`
+    INSERT OR REPLACE INTO legal_help_flows
+      (id, issue, city, title, steps, resources)
+    VALUES
+      (@id, @issue, @city, @title, @steps, @resources)
+  `);
+
+  const updateShelterLiveMeta = db.prepare(`
+    UPDATE shelters
+    SET last_bed_update_at = ?, women_safety_score = ?, lgbtq_safety_score = ?, anti_racism_score = ?
+    WHERE id = ?
+  `);
+
+  const updateResourceLiveMeta = db.prepare(`
+    UPDATE resources
+    SET live_status = ?, status_updated_at = ?, closes_at = ?, essentials = ?
+    WHERE id = ?
+  `);
+
+  const insertPopup = db.prepare(`
+    INSERT OR REPLACE INTO outreach_popups
+      (id, title, type, city, address, lat, lng, starts_at, ends_at, services, verified_by)
+    VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const insertOutreachUser = db.prepare(`
+    INSERT OR REPLACE INTO outreach_users (id, email, password_hash, role, name)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
   const seedAll = () => {
     db.exec('BEGIN');
     try {
@@ -566,6 +640,64 @@ function seed() {
       for (const a of alerts) {
         insertAlert.run(a);
       }
+      for (const flow of legalFlows) {
+        insertLegalFlow.run({
+          ...flow,
+          steps: JSON.stringify(flow.steps),
+          resources: JSON.stringify(flow.resources),
+        });
+      }
+
+      for (const s of shelters) {
+        updateShelterLiveMeta.run(
+          new Date(Date.now() - ((s.id.charCodeAt(s.id.length - 1) % 30) + 2) * 60 * 1000).toISOString(),
+          4 + ((s.id.charCodeAt(0) % 10) / 20),
+          4 + ((s.id.charCodeAt(1) % 10) / 20),
+          4 + ((s.id.charCodeAt(2) % 10) / 20),
+          s.id
+        );
+      }
+
+      for (const r of resources) {
+        const essentials = {
+          food: r.category === 'food',
+          shower: /showers|hygiene/i.test(r.description),
+          restroom: true,
+          charging: /drop-in|clinic|center|centre|services/i.test(r.description),
+          laundry: /family|women|shelter/i.test(r.description),
+        };
+        const status = r.isFree ? 'open' : 'limited';
+        const closesAt = new Date(Date.now() + ((r.id.charCodeAt(r.id.length - 1) % 6) + 1) * 60 * 60 * 1000).toISOString();
+        updateResourceLiveMeta.run(
+          status,
+          new Date(Date.now() - ((r.id.charCodeAt(0) % 40) + 3) * 60 * 1000).toISOString(),
+          closesAt,
+          JSON.stringify(essentials),
+          r.id
+        );
+      }
+
+      insertPopup.run(
+        'popup-001',
+        'Mobile Aid Van – Downtown',
+        'food-van',
+        'New York',
+        '125 W 31st St',
+        40.7496,
+        -73.9925,
+        new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+        JSON.stringify(['Hot meals', 'Phone charging', 'Blankets']),
+        'verified-volunteer'
+      );
+
+      insertOutreachUser.run(
+        'outreach-admin-001',
+        'outreach@saferoots.org',
+        hashPassword('ChangeMe123!'),
+        'admin',
+        'SafeRoots Outreach Admin'
+      );
       db.exec('COMMIT');
     } catch (err) {
       db.exec('ROLLBACK');
@@ -574,7 +706,7 @@ function seed() {
   };
 
   seedAll();
-  console.log(`✓ Seeded ${shelters.length} shelters, ${resources.length} resources, ${alerts.length} alerts.`);
+  console.log(`✓ Seeded ${shelters.length} shelters, ${resources.length} resources, ${alerts.length} alerts, ${legalFlows.length} legal flows, and outreach admin user (outreach@saferoots.org / ChangeMe123!).`);
 }
 
 seed();

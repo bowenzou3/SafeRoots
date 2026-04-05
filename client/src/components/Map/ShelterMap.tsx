@@ -4,7 +4,7 @@ import L from 'leaflet';
 import type { Shelter } from '../../types';
 import { ShelterTagBadge } from '../UI/Badge';
 import { StarRating } from '../UI/StarRating';
-import { Phone, Globe, Clock } from 'lucide-react';
+import { Phone, Globe, Clock, ShieldCheck } from 'lucide-react';
 
 // Fix Leaflet's default icon paths when using Vite/webpack bundlers
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
@@ -48,6 +48,11 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => { map.flyTo([lat, lng], 13, { duration: 1.2 }); }, [lat, lng, map]);
   return null;
+}
+
+function relativeMinutes(iso: string): string {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  return `${mins}m ago`;
 }
 
 interface Props {
@@ -140,13 +145,27 @@ export function ShelterMap({ shelters, selectedId, onSelect, userLat, userLng }:
               <div className="mt-3">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
                   <span>Availability</span>
-                  <span>{shelter.capacity - shelter.currentOccupancy} beds free</span>
+                  <span>{shelter.bedsAvailable} beds free</span>
                 </div>
                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-teal-500 transition-all"
                     style={{ width: `${(shelter.currentOccupancy / shelter.capacity) * 100}%` }}
                   />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Updated {relativeMinutes(shelter.availabilityUpdatedAt)}
+                </p>
+              </div>
+
+              <div className="mt-3 border-t border-gray-100 pt-2">
+                <div className="text-[10px] uppercase tracking-wide text-gray-400 mb-1 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> Safety & Inclusivity
+                </div>
+                <div className="grid grid-cols-3 gap-1 text-[10px]">
+                  <span className="tag bg-pink-100 text-pink-700 justify-center">Women {shelter.safetyScores.women.toFixed(1)}</span>
+                  <span className="tag bg-violet-100 text-violet-700 justify-center">LGBTQ+ {shelter.safetyScores.lgbtq.toFixed(1)}</span>
+                  <span className="tag bg-amber-100 text-amber-700 justify-center">Anti-racism {shelter.safetyScores.antiRacism.toFixed(1)}</span>
                 </div>
               </div>
             </div>

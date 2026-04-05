@@ -7,10 +7,14 @@ import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
 import { apiLimiter } from './middleware/rateLimiter';
-import shelterRoutes   from './routes/shelters';
+import shelterRoutes   from './routes/shelterRoutes';
 import resourceRoutes  from './routes/resources';
 import alertRoutes     from './routes/alerts';
 import volunteerRoutes from './routes/volunteers';
+import metricsRoutes   from './routes/metrics';
+import legalRoutes     from './routes/legal';
+import authRoutes      from './routes/auth';
+import transitRoutes   from './routes/transit';
 import { getDb } from './db';
 
 dotenv.config();
@@ -37,7 +41,7 @@ app.use(helmet({
 app.use(cors({
   origin: CORS_ORIGIN,
   methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json({ limit: '128kb' }));
@@ -49,6 +53,10 @@ app.use('/api/shelters',   shelterRoutes);
 app.use('/api/resources',  resourceRoutes);
 app.use('/api/alerts',     alertRoutes);
 app.use('/api/volunteers', volunteerRoutes);
+app.use('/api/metrics',    metricsRoutes);
+app.use('/api/legal',      legalRoutes);
+app.use('/api/auth',       authRoutes);
+app.use('/api/transit',    transitRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 

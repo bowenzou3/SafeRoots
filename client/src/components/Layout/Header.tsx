@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, X, Phone, ShieldCheck } from 'lucide-react';
+import { Menu, X, Phone, ShieldCheck, LogOut, Navigation, MessageSquare } from 'lucide-react';
 
 const NAV_LINKS = [
   { to: '/shelters',  label: 'Shelters' },
@@ -8,10 +8,15 @@ const NAV_LINKS = [
   { to: '/support',   label: 'Peer Support' },
   { to: '/alerts',    label: 'Crisis Alerts' },
   { to: '/volunteer', label: 'Volunteer' },
+  { to: '/dashboard', label: 'Dashboard' },
 ];
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleQuickExit = () => {
+    window.location.replace('https://weather.com');
+  };
 
   return (
     <header className="bg-primary-700 text-white shadow-lg sticky top-0 z-50">
@@ -23,6 +28,28 @@ export function Header() {
         <a href="tel:988" className="font-bold hover:underline">Suicide &amp; Crisis: 988</a>
         <span aria-hidden="true" className="hidden sm:inline">|</span>
         <a href="tel:18664887386" className="font-bold hover:underline">Trans Lifeline: 1-866-488-7386</a>
+        <span aria-hidden="true" className="hidden sm:inline">|</span>
+        <a href="sms:741741&body=HOME" className="font-bold hover:underline">Text HOME to 741741</a>
+      </div>
+
+      <div className="bg-primary-900/95 text-white text-xs py-2 px-4 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+        <a href="tel:988" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-red-600 hover:bg-red-500 font-semibold">
+          <Phone className="w-3 h-3" /> Call 988
+        </a>
+        <a href="sms:741741&body=HOME" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500 text-gray-900 hover:bg-amber-400 font-semibold">
+          <MessageSquare className="w-3 h-3" /> Text Crisis
+        </a>
+        <Link to="/shelters" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-teal-500 hover:bg-teal-400 text-gray-900 font-semibold">
+          <Navigation className="w-3 h-3" /> Nearest Safe Place
+        </Link>
+        <button
+          type="button"
+          onClick={handleQuickExit}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 hover:bg-white font-semibold"
+          aria-label="Quick exit to external safe page"
+        >
+          <LogOut className="w-3 h-3" /> Quick Exit
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
